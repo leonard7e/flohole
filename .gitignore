@@ -1,25 +1,41 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
-*.exe
-*.exe~
-*.dll
-*.so
-*.dylib
+# Git Ignore, suitable for Rust language
 
-# Test binary, built with `go test -c`
-*.test
+# Vom Compiler erzeugte Dateien
+/target/
+Cargo.lock
 
-# Output of the go coverage tool, specifically when used with LiteIDE
-*.out
+# Editor/IDE spezifische Dateien
+.idea/
+.vscode/
+*.swp
+*~
+tmp/
+*.tmp
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Ausführbare Dateien
+/debug/
+/release/
 
-# Go workspace file
-go.work
-go.work.sum
+# Betriebssystemspezifische Dateien
+.DS_Store
+Thumbs.db
 
-# env file
+# Distributionspakete
+*.tar.gz
+*.zip
+
+# Zusätzliche optionale Ignore-Muster (je nach Projekt)
+
+# Logdateien
+*.log
+
+# Zusätzliche Build-Artefakte (z.B. für Dokumentation)
+/doc/
+
+# Optional: Ignoriere .env-Dateien (sensible Daten)
 .env
+
+
+# Added by cargo
+
+/target
