@@ -16,6 +16,10 @@ struct Args {
     #[arg(short, long, default_value_t = 9.0)]
     mid: f64,
 
+    /// Anzahl der Bohrlöcher
+    #[arg(short, long, default_value_t = 6)]
+    nholes: u8,
+
     /// Layout der Bohrlöcher (dur6, moll6, dur7, moll7, dur8, moll8, chromatic, shakuhachi)
     #[arg(short, long, default_value = "minor")]
     scale: String,
@@ -61,7 +65,7 @@ fn main() {
         .get(args.scale.as_str())
         .expect("Invalid scale")
         .iter()
-        .take(6)
+        .take(args.nholes)
         .cloned()
         .collect();
     let loecher = bohrlöcher(args.labium, args.length, args.mid, &skala);
