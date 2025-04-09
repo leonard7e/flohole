@@ -4,27 +4,27 @@ use clap::Parser;
 #[command(
     author = "Leonard Siebeneicher",
     version = "0.1.0",
-    about = "Berechne die Position der Bohrlöcher für eine Flöte.",
-    long_about = "Berechne die Position der Bohrlöcher für eine Flöte."
+    about = "Calculate the position of the holes for a flute.",
+    long_about = "Calculate the position of the holes for a flute."
 )]
 
 pub struct Args {
-    /// Länge der Flöte
+    /// Length of the flute
     pub length: f64,
 
-    /// Die Position der Tonleitern in dem Segment (Fraction) der Flöte
+    /// The position of the tone scale in the segment (Fraction) of the flute
     #[arg(short, long, default_value_t = 9.0)]
     pub position: f64,
 
-    /// Anzahl der Bohrlöcher,
+    /// Number of holes
     #[arg(short, long, default_value_t = 6)]
     pub nholes: usize,
 
-    /// Fraction bezeichnet ein Segment der Flöte.
+    /// Fraction representing the segment of the flute
     #[arg(short, long, default_value_t = 0.5)]
     pub fraction: f64,
 
-    /// Layout der Bohrlöcher (dur6, moll6, dur7, moll7, dur8, moll8, chromatic, shakuhachi)
+    /// Layout of the holes
     #[arg(short, long, default_value = "major")]
     pub scale: String,
 
