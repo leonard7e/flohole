@@ -11,19 +11,19 @@ fn fingerhole_locations(fraction: f64, pos: f64, notes: &[f64]) -> Vec<f64> {
         .collect()
 }
 
-fn drilling_holes(labium: f64, length: f64, fraction: f64, pos: f64, skala: &[f64]) -> Vec<f64> {
-    let fingerholes = fingerhole_locations(fraction, pos, skala);
+fn calculate_fingerhole_positions(
+    labium: f64,
+    length: f64,
+    fraction: f64,
+    position_at_fraction: f64,
+    scale: &[f64],
+) -> Vec<f64> {
+    let fingerholes = fingerhole_locations(fraction, position_at_fraction, scale);
     fingerholes
         .iter()
         .map(|&p| labium + (length - labium) * p)
         .collect()
 }
-
-/*
-fn lerp(a1: f64, a2: f64, t: f64) -> f64 {
-    (1.0 - t) * a1 + t * a2
-}
-*/
 
 fn flute_scale(args: &argument_parser::Args, scale_layout: HashMap<&str, Vec<f64>>) -> Vec<f64> {
     scale_layout
@@ -35,6 +35,19 @@ fn flute_scale(args: &argument_parser::Args, scale_layout: HashMap<&str, Vec<f64
         .collect()
 }
 
+fn report_results_to_user(args: &argument_parser::Args, holes: &[f64]) {
+    println!("Length: {}mm\tLabium: {:?}mm", args.length, args.labium);
+    println!(
+        "Fraction: {}\tPosition (Halftones): {}",
+        args.fraction, args.position
+    );
+    println!(
+        "Scale: {:?}\tAmount of fingerholes: {}\n",
+        args.scale, args.nholes
+    );
+    println!("Fingerhole drilling Positions\n{:?}", holes);
+}
+
 fn main() {
     let args = argument_parser::Args::parse();
 
@@ -42,7 +55,7 @@ fn main() {
 
     let flute_scale: Vec<f64> = flute_scale(&args, scale_layout);
 
-    let loecher = drilling_holes(
+    let holes = calculate_fingerhole_positions(
         args.labium,
         args.length,
         args.fraction,
@@ -50,5 +63,5 @@ fn main() {
         &flute_scale,
     );
 
-    println!("{:?}", loecher);
+    report_results_to_user(&args, &holes);
 }
