@@ -18,7 +18,7 @@ struct Args {
 
     /// Anzahl der Bohrlöcher
     #[arg(short, long, default_value_t = 6)]
-    nholes: u8,
+    nholes: usize,
 
     /// Layout der Bohrlöcher (dur6, moll6, dur7, moll7, dur8, moll8, chromatic, shakuhachi)
     #[arg(short, long, default_value = "minor")]
@@ -53,8 +53,8 @@ fn get_drill_layout() -> HashMap<&'static str, Vec<f64>> {
     drill_layout
 }
 
-fn lerp(a1: f64, a2: f64, t:) -> f64 {
-     (1.0-t)*a1 + t*a2
+fn lerp(a1: f64, a2: f64, t: f64) -> f64 {
+    (1.0 - t) * a1 + t * a2
 }
 
 fn main() {
