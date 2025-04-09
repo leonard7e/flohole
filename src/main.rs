@@ -21,7 +21,7 @@ struct Args {
     nholes: usize,
 
     /// Layout der Bohrlöcher (dur6, moll6, dur7, moll7, dur8, moll8, chromatic, shakuhachi)
-    #[arg(short, long, default_value = "minor")]
+    #[arg(short, long, default_value = "major")]
     scale: String,
 
     /// Depth of the labium
@@ -43,7 +43,7 @@ fn bohrlöcher(labium: f64, length: f64, mid: f64, skala: &[f64]) -> Vec<f64> {
 
 fn get_drill_layout() -> HashMap<&'static str, Vec<f64>> {
     let mut drill_layout: HashMap<&str, Vec<f64>> = HashMap::new();
-    drill_layout.insert("mayor", vec![2.0, 4.0, 5.0, 7.0, 9.0, 11.0, 12.0, 14.0]);
+    drill_layout.insert("major", vec![2.0, 4.0, 5.0, 7.0, 9.0, 11.0, 12.0, 14.0]);
     drill_layout.insert("minor", vec![2.0, 3.0, 5.0, 7.0, 8.0, 10.0, 12.0, 14.0]);
     drill_layout.insert("h-minor", vec![2.0, 3.0, 5.0, 7.0, 8.0, 11.0, 12.0, 14.0]);
     drill_layout.insert("z-minor", vec![2.0, 3.0, 4.0, 7.0, 8.0, 11.0, 12.0, 14.0]);
