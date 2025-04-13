@@ -1,24 +1,25 @@
 use clap::Parser;
+use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::str::FromStr;
 use std::vec::Vec;
 
 #[derive(Clone, Debug)]
 pub struct Tune {
-    pub tune: Vec<(usize, f64)>,
+    pub pitch: Vec<f64>,
 }
 
 impl Default for Tune {
     fn default() -> Self {
         Tune {
-            tune: vec![(0, 0.0), (1, 0.0), (2, 0.0), (3, 0.0), (4, 0.0), (5, 0.0)],
+            pitch: vec![0.0; 20],
         }
     }
 }
 
 impl Display for Tune {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "Tune: {:?}", self.tune)
+        write!(f, "Tune: {:?}", self.pitch)
     }
 }
 
@@ -26,18 +27,28 @@ impl FromStr for Tune {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut entries = s
-            .split(":")
-            .map(|e| {
-                let entry = e.split(',').collect::<Vec<&str>>();
-                (
-                    entry[0].parse::<usize>().unwrap(),
-                    entry[1].parse::<f64>().unwrap(),
-                )
-            })
-            .collect::<Vec<(usize, f64)>>();
-        entries.sort_by(|a, b| a.0.cmp(&b.0));
-        Ok(Tune { tune: entries })
+        let mut tune_map: BTreeMap<usize, f64> = BTreeMap::new();
+        for (idx, entry) in s.split(":").map(|e| {
+            let entry = e.split(',').collect::<Vec<&str>>();
+            println!("entry: {:?}", entry);
+            (
+                entry[0].parse::<usize>().unwrap(),
+                entry[1].parse::<f64>().unwrap(),
+            )
+        }) {
+            if let Some(value) = tune_map.get(&idx) {
+                tune_map.insert(idx, entry + value);
+            } else {
+                tune_map.insert(idx, entry);
+            }
+        }
+
+        Ok(Tune {
+            pitch: (0..20)
+                .map(|idx| tune_map.get(&idx).unwrap_or(&0.0))
+                .cloned()
+                .collect(),
+        })
     }
 }
 
@@ -69,7 +80,7 @@ pub struct Args {
     #[arg(short, long, default_value = "major")]
     pub scale: String,
 
-    #[arg(short, long, default_value_t = Tune::default())]
+    #[arg(short, long, default_value = "0,0")]
     pub tune: Tune,
 
     /// Depth of the labium
