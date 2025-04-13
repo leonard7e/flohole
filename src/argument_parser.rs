@@ -30,7 +30,6 @@ impl FromStr for Tune {
         let mut tune_map: BTreeMap<usize, f64> = BTreeMap::new();
         for (idx, entry) in s.split(":").map(|e| {
             let entry = e.split(',').collect::<Vec<&str>>();
-            println!("entry: {:?}", entry);
             (
                 entry[0].parse::<usize>().unwrap(),
                 entry[1].parse::<f64>().unwrap(),
