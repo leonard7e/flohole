@@ -1,14 +1,24 @@
 use clap::Parser;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 mod argument_parser;
 mod scales;
 
-fn fingerhole_locations(fraction: f64, pos: f64, notes: &[f64], pitch: &[f64]) -> Vec<f64> {
+fn fingerhole_locations(
+    fraction: f64,
+    pos: f64,
+    notes: &[f64],
+    pitch: &BTreeMap<usize, f64>,
+) -> Vec<f64> {
     notes
         .iter()
         .enumerate()
-        .map(|(idx, &note)| fraction.powf((note + pitch[idx] / 100.0) / pos))
+        .map(|(idx, &note)| {
+            pitch
+                .get(&idx)
+                .map(|t| fraction.powf((note + t / 100.0) / pos))
+                .unwrap_or(fraction.powf(note / pos))
+        })
         .collect()
 }
 
@@ -18,7 +28,7 @@ fn calculate_fingerhole_positions(
     fraction: f64,
     position_at_fraction: f64,
     scale: &[f64],
-    pitch: &[f64],
+    pitch: &BTreeMap<usize, f64>,
 ) -> Vec<f64> {
     let fingerholes = fingerhole_locations(fraction, position_at_fraction, scale, pitch);
     fingerholes

@@ -3,16 +3,16 @@ use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::str::FromStr;
 use std::vec::Vec;
-
+// TODO: pitch lieber als BTreeMap Da brauche ich keine fixe Größe, wie etwa bei einem Vec.
 #[derive(Clone, Debug)]
 pub struct Tune {
-    pub pitch: Vec<f64>,
+    pub pitch: BTreeMap<usize, f64>,
 }
 
 impl Default for Tune {
     fn default() -> Self {
         Tune {
-            pitch: vec![0.0; 20],
+            pitch: BTreeMap::new(),
         }
     }
 }
@@ -28,6 +28,10 @@ impl FromStr for Tune {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut tune_map: BTreeMap<usize, f64> = BTreeMap::new();
+        if s.is_empty() {
+            return Ok(Tune { pitch: tune_map });
+        }
+
         for (idx, entry) in s.split(":").map(|e| {
             let entry = e.split(',').collect::<Vec<&str>>();
             (
@@ -42,12 +46,7 @@ impl FromStr for Tune {
             }
         }
 
-        Ok(Tune {
-            pitch: (0..20)
-                .map(|idx| tune_map.get(&idx).unwrap_or(&0.0))
-                .cloned()
-                .collect(),
-        })
+        Ok(Tune { pitch: tune_map })
     }
 }
 
@@ -79,7 +78,7 @@ pub struct Args {
     #[arg(short, long, default_value = "major")]
     pub scale: String,
 
-    #[arg(short, long, default_value = "0,0")]
+    #[arg(short, long, default_value = "")]
     pub tune: Tune,
 
     /// Depth of the labium
