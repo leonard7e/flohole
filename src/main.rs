@@ -48,17 +48,28 @@ fn flute_scale(args: &argument_parser::Args, scale_layout: HashMap<&str, Vec<f64
 }
 
 fn report_results_to_user(args: &argument_parser::Args, holes: &[f64]) {
-    println!("Length: {}mm\tLabium: {:?}mm", args.length, args.labium);
-    println!(
-        "Fraction: {}\tPosition (Halftones): {}",
-        args.fraction, args.position
-    );
-    println!(
-        "Scale: {:?}\tAmount of fingerholes: {}\n",
-        args.scale, args.nholes
-    );
-    println!("Tune fingerholes: {:#?}\n", args.tune);
-    println!("Fingerhole drilling Positions\n{:#?}", holes);
+    println!("Flute Design Parameters:");
+    println!("  Length: {:.2} mm", args.length);
+    println!("  Labium: {:.2} mm", args.labium);
+    println!("  Scale: {}", args.scale);
+    println!("  Number of Fingerholes: {}", args.nholes);
+    println!("\nAcoustic Model Parameters:");
+    println!("  Fraction: {:.4}", args.fraction);
+    println!("  Position (Halftones): {:.2}", args.position);
+
+    if !args.tune.pitch.is_empty() {
+        println!("\nTuning Adjustments (cents):");
+        for (hole_index, pitch_adjustment) in &args.tune.pitch {
+            println!("  Hole {}: {:.2} cents", hole_index + 1, pitch_adjustment);
+        }
+    } else {
+        println!("\nNo tuning adjustments applied.");
+    }
+
+    println!("\nFingerhole Drilling Positions (mm):");
+    for (i, &hole_position) in holes.iter().enumerate() {
+        println!("  Hole {}: {:.2} mm", i + 1, hole_position);
+    }
 }
 
 fn main() {
