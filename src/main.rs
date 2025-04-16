@@ -57,8 +57,8 @@ fn report_results_to_user(args: &argument_parser::Args, holes: &[f64]) {
         "Scale: {:?}\tAmount of fingerholes: {}\n",
         args.scale, args.nholes
     );
-    println!("Tune fingerholes: {}\n", args.tune);
-    println!("Fingerhole drilling Positions\n{:?}", holes);
+    println!("Tune fingerholes: {:#?}\n", args.tune);
+    println!("Fingerhole drilling Positions\n{:#?}", holes);
 }
 
 fn main() {

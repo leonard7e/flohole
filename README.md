@@ -1,2 +1,2 @@
 # flohole
-For Flutemakers: calculate locations of fingerholes for various flutes.
+This command line tools tries to be useful for Flutemakers. It calculates the locations for fingerholes.
