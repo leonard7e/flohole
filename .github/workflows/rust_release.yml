@@ -1,0 +1,34 @@
+name: Release Build
+
+on:
+  release:
+    types: [released] 
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_release: 
+    runs-on: ${{ matrix.os }} 
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest] 
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Build Release Executable
+      run: cargo build --verbose --release
+
+    # - name: Run Release Tests
+    #   run: cargo test --verbose --release
+
+    - name: Upload Release Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ github.event.repository.name }}-${{ matrix.os }}-executable # Benennen Sie das Artefakt eindeutig
+        path: |
+          target/release/flohole 
+          target/release/flohole.exe 
