@@ -13,7 +13,7 @@ jobs:
         steps:
             # Checkout the repository
             - name: Checkout code
-              uses: actions/checkout@v3
+              uses: actions/checkout@v4
 
             # Install Rust toolchain
             - name: Set up Rust
@@ -40,6 +40,8 @@ jobs:
             # Upload artifact to the release
             - name: Upload Release Asset
               uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   upload_url: ${{ github.event.release.upload_url }}
                   asset_path: dist/flohole-linux-x86_64
