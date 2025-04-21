@@ -58,7 +58,7 @@ impl FromStr for Tune {
 #[derive(Parser, Debug)]
 #[command(
     author = "Leonard Siebeneicher",
-    version = "0.2.9",
+    version = "0.2.10",
     about = "Calculate the position of the holes for a flute.",
     long_about = "Calculate the position of the holes for a flute."
 )]
