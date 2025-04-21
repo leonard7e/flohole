@@ -37,7 +37,7 @@ jobs:
         steps:
             - name: Download Build Artifacts
               uses: actions/download-artifact@v4
-              with:
+              with: # Empty – no inputs required
 
             # Wichtig: Die heruntergeladenen Artefakte liegen jetzt in:
             # ./flohole-ubuntu-latest-executable/
