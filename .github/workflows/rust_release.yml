@@ -1,6 +1,10 @@
 name: Release Build and Upload Assets
 
 on:
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["main"]
     release:
         types: [released]
 
