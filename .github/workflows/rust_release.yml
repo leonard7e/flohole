@@ -1,62 +1,57 @@
-name: Release Build and Upload Assets
+name: Release
 
 on:
     release:
-        types: [released]
-
-env:
-    CARGO_TERM_COLOR: always
+        types:
+            - published
 
 jobs:
-    build_release: # Build for all platforms and uploads artifacts to the workflow run page
-        runs-on: ${{ matrix.os }}
-
+    build:
+        name: Build and Upload Release Assets
+        runs-on: ubuntu-latest
         strategy:
             matrix:
-                os: [ubuntu-latest, windows-latest]
+                platform: [x86_64-unknown-linux-gnu, x86_64-pc-windows-gnu]
 
         steps:
+            # Checkout the repository
             - name: Checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v3
 
-            - name: Build Release Executable
-              run: cargo build --verbose --release
-
-            - name: Upload Build Artifact (for debugging/access via run summary)
-              uses: actions/upload-artifact@v4
+            # Install Rust toolchain
+            - name: Set up Rust
+              uses: actions-rs/toolchain@v1
               with:
-                  name: ${{ github.event.repository.name }}-${{ matrix.os }}-executable # Artefaktname
-                  path: |
-                      target/release/flohole
-                      target/release/flohole.exe
+                  toolchain: stable
 
-    upload_release_assets: # Attach assets to the new release
-        needs: build_release
-        runs-on: ubuntu-latest
+            # Install additional target for Windows builds
+            - name: Add Windows target
+              if: matrix.platform == 'x86_64-pc-windows-gnu'
+              run: rustup target add x86_64-pc-windows-gnu
 
-        steps:
-            - name: Download Build Artifacts
-              uses: actions/download-artifact@v4
-              with:
-                  path: .
+            # Build the project
+            - name: Build
+              run: cargo build --release --target ${{ matrix.platform }}
 
-            # Wichtig: Die heruntergeladenen Artefakte liegen jetzt in:
-            # ./flohole-ubuntu-latest-executable/
-            # ./flohole-windows-latest-executable/
-            # Die Originalpfade (target/release/...) liegen dann innerhalb dieser Unterordner.
+            # Archive the binary
+            - name: Archive binary
+              run: |
+                  mkdir dist
+                  if [[ "${{ matrix.platform }}" == "x86_64-unknown-linux-gnu" ]]; then
+                    cp target/${{ matrix.platform }}/release/flohole dist/flohole-linux-x86_64
+                  else
+                    cp target/${{ matrix.platform }}/release/flohole.exe dist/flohole-windows-x86_64.exe
+                  fi
 
-            - name: Upload Windows Executable to Release
-              uses: actions/upload-release-asset@v1
-              with:
-                  upload_url: ${{ github.event.release.upload_url }} # Die URL zum Hochladen kommt vom Release-Event
-                  asset_path: ./flohole-windows-latest-executable/target/release/flohole.exe # Pfad zur EXE nach dem Download
-                  asset_name: flohole-windows.exe # Name, wie das Asset im Release erscheinen soll
-                  asset_content_type: application/vnd.microsoft.portable-executable # MIME-Type für EXE
-
-            - name: Upload Linux Executable to Release
+            # Upload artifact to the release
+            - name: Upload Release Asset
               uses: actions/upload-release-asset@v1
               with:
                   upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: ./flohole-ubuntu-latest-executable/target/release/flohole # Pfad zur Linux-Datei nach dem Download
-                  asset_name: flohole-linux # Name, wie das Asset im Release erscheinen soll
-                  asset_content_type: application/octet-stream # Generischer MIME-Type für Binärdateien
+                  asset_path: |
+                      dist/flohole-linux-x86_64
+                      dist/flohole-windows-x86_64.exe
+                  asset_name: |
+                      flohole-linux-x86_64
+                      flohole-windows-x86_64.exe
+                  asset_content_type: application/octet-stream
