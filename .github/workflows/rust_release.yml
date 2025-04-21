@@ -1,34 +1,63 @@
-name: Release Build
+name: Release Build and Upload Assets
 
 on:
-  release:
-    types: [released] 
+    release:
+        types: [released]
 
 env:
-  CARGO_TERM_COLOR: always
+    CARGO_TERM_COLOR: always
 
 jobs:
-  build_release: 
-    runs-on: ${{ matrix.os }} 
+    build_release: # Build for all platforms and uploads artifacts to the workflow run page
+        runs-on: ${{ matrix.os }}
 
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest] 
+        strategy:
+            matrix:
+                os: [ubuntu-latest, windows-latest]
 
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-    - name: Build Release Executable
-      run: cargo build --verbose --release
+            - name: Build Release Executable
+              run: cargo build --verbose --release
 
-    # - name: Run Release Tests
-    #   run: cargo test --verbose --release
+            - name: Upload Build Artifact (for debugging/access via run summary)
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ github.event.repository.name }}-${{ matrix.os }}-executable # Artefaktname
+                  path: |
+                      target/release/flohole
+                      target/release/flohole.exe
 
-    - name: Upload Release Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ github.event.repository.name }}-${{ matrix.os }}-executable # Benennen Sie das Artefakt eindeutig
-        path: |
-          target/release/flohole 
-          target/release/flohole.exe 
+    upload_release_assets: # Attach assets to the new release
+        needs: build_release
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Download Build Artifacts
+              uses: actions/download-artifact@v4
+              with:
+
+            # Wichtig: Die heruntergeladenen Artefakte liegen jetzt in:
+            # ./flohole-ubuntu-latest-executable/
+            # ./flohole-windows-latest-executable/
+            # Die Originalpfade (target/release/...) liegen dann innerhalb dieser Unterordner.
+
+            - name: Upload Windows Executable to Release
+              uses: actions/upload-release-asset@v1
+              with:
+                  repo_token: ${{ secrets.GITHUB_TOKEN }} # Token für die Authentifizierung
+                  upload_url: ${{ github.event.release.upload_url }} # Die URL zum Hochladen kommt vom Release-Event
+                  asset_path: ./flohole-windows-latest-executable/target/release/flohole.exe # Pfad zur EXE nach dem Download
+                  asset_name: flohole-windows.exe # Name, wie das Asset im Release erscheinen soll
+                  asset_content_type: application/vnd.microsoft.portable-executable # MIME-Type für EXE
+
+            - name: Upload Linux Executable to Release
+              uses: actions/upload-release-asset@v1
+              with:
+                  repo_token: ${{ secrets.GITHUB_TOKEN }}
+                  upload_url: ${{ github.event.release.upload_url }}
+                  asset_path: ./flohole-ubuntu-latest-executable/target/release/flohole # Pfad zur Linux-Datei nach dem Download
+                  asset_name: flohole-linux # Name, wie das Asset im Release erscheinen soll
+                  asset_content_type: application/octet-stream # Generischer MIME-Type für Binärdateien
