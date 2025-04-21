@@ -7,11 +7,8 @@ on:
 
 jobs:
     build:
-        name: Build and Upload Release Assets
+        name: Build and Upload Release Asset
         runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                platform: [x86_64-unknown-linux-gnu, x86_64-pc-windows-gnu]
 
         steps:
             # Checkout the repository
@@ -24,34 +21,27 @@ jobs:
               with:
                   toolchain: stable
 
-            # Install additional target for Windows builds
-            - name: Add Windows target
-              if: matrix.platform == 'x86_64-pc-windows-gnu'
-              run: rustup target add x86_64-pc-windows-gnu
-
             # Build the project
             - name: Build
-              run: cargo build --release --target ${{ matrix.platform }}
+              run: cargo build --release --target x86_64-unknown-linux-gnu
 
-            # Archive the binary
-            - name: Archive binary
-              run: |
-                  mkdir dist
-                  if [[ "${{ matrix.platform }}" == "x86_64-unknown-linux-gnu" ]]; then
-                    cp target/${{ matrix.platform }}/release/flohole dist/flohole-linux-x86_64
-                  else
-                    cp target/${{ matrix.platform }}/release/flohole.exe dist/flohole-windows-x86_64.exe
-                  fi
+            # Ensure output directory exists
+            - name: Prepare output directory
+              run: mkdir -p dist
+
+            # Copy binary to output directory
+            - name: Copy binary to dist
+              run: cp target/x86_64-unknown-linux-gnu/release/flohole dist/flohole-linux-x86_64
+
+            # Verify dist directory contents
+            - name: Verify dist directory
+              run: ls -l dist
 
             # Upload artifact to the release
             - name: Upload Release Asset
               uses: actions/upload-release-asset@v1
               with:
                   upload_url: ${{ github.event.release.upload_url }}
-                  asset_path: |
-                      dist/flohole-linux-x86_64
-                      dist/flohole-windows-x86_64.exe
-                  asset_name: |
-                      flohole-linux-x86_64
-                      flohole-windows-x86_64.exe
+                  asset_path: dist/flohole-linux-x86_64
+                  asset_name: flohole-linux-x86_64
                   asset_content_type: application/octet-stream
