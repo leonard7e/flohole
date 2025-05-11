@@ -25,6 +25,7 @@ Thumbs.db
 *.zip
 
 # Zusätzliche optionale Ignore-Muster (je nach Projekt)
+TODO.*
 
 # Logdateien
 *.log
