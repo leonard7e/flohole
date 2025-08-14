@@ -42,8 +42,14 @@ fn flute_scale(args: &argument_parser::Args, scale_layout: HashMap<&str, Vec<f64
         .get(args.scale.as_str())
         .expect("Invalid scale")
         .iter()
+        .cycle()
+        .scan(0.0f64, |st, elem| {
+            let ret = *st;
+            *st += elem;
+            Some(ret)
+        })
+        .skip(1)
         .take(args.nholes)
-        .cloned()
         .collect()
 }
 
