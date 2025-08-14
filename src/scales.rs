@@ -23,6 +23,8 @@ pub fn scale_layout() -> HashMap<&'static str, Vec<f64>> {
     drill_layout.insert("hminor", h_minor);
     drill_layout.insert("zminor", z_minor);
     drill_layout.insert("pentatonic", pentatonic);
+    drill_layout.insert("chromatic", vec![2.0]);
+    drill_layout.insert("chromatic_minor", vec![2.0, 1.0, 2.0, 2.0, 2.0, 2.0, 1.0]);
 
     drill_layout
 }
