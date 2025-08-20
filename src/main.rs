@@ -53,7 +53,7 @@ fn flute_scale(args: &argument_parser::Args, scale_layout: HashMap<&str, Vec<f64
         .collect()
 }
 
-fn report_results_to_user(args: &argument_parser::Args, holes: &[f64]) {
+fn report_results_to_user(args: &argument_parser::Args, flute_scale: &[f64], holes: &[f64]) {
     println!("Flute Design Parameters:");
     println!("  Length: {:.2} mm", args.length);
     println!("  Labium: {:.2} mm", args.labium);
@@ -73,9 +73,22 @@ fn report_results_to_user(args: &argument_parser::Args, holes: &[f64]) {
     }
 
     println!("\nFingerhole Drilling Positions (mm):");
-    for (i, &hole_position) in holes.iter().enumerate() {
-        println!("  Hole {}: {:.2} mm", i + 1, hole_position);
-    }
+    println!("  Hole\tScale\tDrilling Position");
+    println!(
+        "{}",
+        flute_scale
+            .iter()
+            .zip(holes.iter())
+            .enumerate()
+            .map(|(index, (&scale, &position))| format!(
+                "  {} …\t{:.2}\t{:.1}",
+                index + 1,
+                scale,
+                position
+            ))
+            .collect::<Vec<String>>()
+            .join("\n")
+    );
 }
 
 fn main() {
@@ -94,5 +107,5 @@ fn main() {
         &args.tune.pitch,
     );
 
-    report_results_to_user(&args, &holes);
+    report_results_to_user(&args, &flute_scale, &holes);
 }
