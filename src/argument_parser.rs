@@ -92,7 +92,7 @@ impl FromStr for Drop {
 #[derive(Parser, Debug)]
 #[command(
     author = "Leonard Siebeneicher",
-    version = "0.4.0",
+    version = "0.4.1",
     about = "Calculate the position of the holes for a flute.",
     long_about = "Calculate the position of the holes for a flute."
 )]
