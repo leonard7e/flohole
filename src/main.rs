@@ -15,7 +15,7 @@ fn fingerhole_locations(
         .enumerate()
         .map(|(idx, &note)| {
             pitch
-                .get(&idx)
+                .get(&(idx + 1))
                 .map(|t| fraction.powf((note + t / 100.0) / pos))
                 .unwrap_or(fraction.powf(note / pos))
         })
@@ -73,7 +73,7 @@ fn report_results_to_user(args: &argument_parser::Args, flute_scale: &[f64], hol
     if !args.tune.pitch.is_empty() {
         println!("\nTuning Adjustments (cents):");
         for (hole_index, pitch_adjustment) in &args.tune.pitch {
-            println!("  Hole {}: {:.2} cents", hole_index + 1, pitch_adjustment);
+            println!("  Hole {}: {:.2} cents", hole_index, pitch_adjustment);
         }
     } else {
         println!("\nNo tuning adjustments applied.");
