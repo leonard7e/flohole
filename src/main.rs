@@ -80,7 +80,16 @@ fn report_results_to_user(args: &argument_parser::Args, flute_scale: &[f64], hol
     }
 
     if !args.drop.drop_from_scale.is_empty() {
-        println!("\nDrop tones from scale: {:?}", args.drop.drop_from_scale);
+        println!("\nDrop from scale:");
+        let dropped_tones = &args
+            .drop
+            .drop_from_scale
+            .iter()
+            .map(|d| d.to_string())
+            .collect::<Vec<String>>()
+            .join(", ");
+
+        println!("  {}", dropped_tones);
     }
 
     println!("\nFingerhole Drilling Positions (mm):");
