@@ -42,13 +42,20 @@ fn flute_scale(args: &argument_parser::Args, scale_layout: HashMap<&str, Vec<f64
         .get(args.scale.as_str())
         .expect("Invalid scale")
         .iter()
+        // Assemble the scale layout for the flute
+        .enumerate()
         .cycle()
-        .scan(0.0f64, |st, elem| {
+        // Accumulate the halftones in the scale layout
+        .scan(0.0f64, |st, (i, elem)| {
             let ret = *st;
             *st += elem;
-            Some(ret)
+            Some((i, ret))
         })
-        .skip(1)
+        // Filter out the halftones that should be dropped
+        .filter(|(i, _)| !args.drop.drop_from_scale.contains(i))
+        .map(|(_, hole)| hole) // Get rid of the enumerated index
+        // Finally, take the required number of holes
+        .skip(1) // Skip hole Zero
         .take(args.nholes)
         .collect()
 }
@@ -70,6 +77,10 @@ fn report_results_to_user(args: &argument_parser::Args, flute_scale: &[f64], hol
         }
     } else {
         println!("\nNo tuning adjustments applied.");
+    }
+
+    if !args.drop.drop_from_scale.is_empty() {
+        println!("Drop tones from scale: {:?}", args.drop.drop_from_scale);
     }
 
     println!("\nFingerhole Drilling Positions (mm):");
