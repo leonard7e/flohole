@@ -3,13 +3,14 @@ use clap::Parser;
 pub mod drop;
 pub mod tune;
 
+use crate::version;
 use drop::Drop;
 use tune::Tune;
 
 #[derive(Parser, Debug)]
 #[command(
     author = "Leonard Siebeneicher",
-    version = "0.4.2",
+    version = version::APP_VERSION,
     about = "Calculate the position of the holes for a flute.",
     long_about = "Calculate the position of the holes for a flute."
 )]
