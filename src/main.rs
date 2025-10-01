@@ -3,7 +3,6 @@ use std::collections::{BTreeMap, HashMap};
 
 mod argument_parser;
 mod scales;
-mod version;
 
 fn fingerhole_locations(
     fraction: f64,

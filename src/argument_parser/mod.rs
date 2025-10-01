@@ -3,14 +3,17 @@ use clap::Parser;
 pub mod drop;
 pub mod tune;
 
-use crate::version;
 use drop::Drop;
 use tune::Tune;
 
+// Adopt version from Cargo.toml
+pub const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
+
+// Implement the argument parser
 #[derive(Parser, Debug)]
 #[command(
     author = "Leonard Siebeneicher",
-    version = version::APP_VERSION,
+    version = APP_VERSION,
     about = "Calculate the position of the holes for a flute.",
     long_about = "Calculate the position of the holes for a flute."
 )]
