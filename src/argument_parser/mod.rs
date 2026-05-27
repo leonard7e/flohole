@@ -48,3 +48,220 @@ pub struct Args {
     #[arg(short, long, default_value_t = 6.0)]
     pub labium: f64,
 }
+
+impl Args {
+    pub fn validate(&self) -> Result<(), String> {
+        Some(self.length)
+            .filter(|&l| l > 0.0)
+            .ok_or_else(|| "Length must be greater than zero.".to_string())?;
+
+        Some(self.labium)
+            .filter(|&l| l > 0.0)
+            .ok_or_else(|| "Labium depth must be greater than zero.".to_string())?;
+
+        Some(())
+            .filter(|_| self.length > self.labium)
+            .ok_or_else(|| format!(
+                "Length ({:.2} mm) must be greater than labium depth ({:.2} mm).",
+                self.length, self.labium
+            ))?;
+
+        Some(self.fraction)
+            .filter(|&f| f > 0.0 && f < 1.0)
+            .ok_or_else(|| "Fraction must be strictly between 0.0 and 1.0.".to_string())?;
+
+        Some(self.position)
+            .filter(|&p| p > 0.0)
+            .ok_or_else(|| "Position must be greater than zero.".to_string())?;
+
+        Some(self.nholes)
+            .filter(|&n| n > 0)
+            .ok_or_else(|| "Number of holes must be at least 1.".to_string())?;
+
+        // Validate scale existence
+        let layouts = crate::scales::scale_layout();
+        let scale_pattern = layouts
+            .get(self.scale.as_str())
+            .ok_or_else(|| {
+                let mut supported: Vec<_> = layouts.keys().cloned().collect();
+                supported.sort();
+                format!(
+                    "Unknown scale '{}'. Supported scales are: {}",
+                    self.scale,
+                    supported.join(", ")
+                )
+            })?;
+
+        // Validate drop indices
+        let scale_len = scale_pattern.len();
+        self.drop.drop_from_scale
+            .iter()
+            .copied()
+            .find(|&dropped| dropped >= scale_len)
+            .map(|dropped| -> Result<(), String> {
+                Err(format!(
+                    "Drop index {} is out of bounds for scale '{}' (valid indices: 0..{})",
+                    dropped, self.scale, scale_len
+                ))
+            })
+            .transpose()?;
+
+        Some(self.drop.drop_from_scale.len())
+            .filter(|&len| len < scale_len)
+            .ok_or_else(|| format!(
+                "Cannot drop all elements of scale '{}'. At least one interval must remain.",
+                self.scale
+            ))?;
+
+        // Validate tuning hole indices (1-based index)
+        self.tune.pitch
+            .keys()
+            .copied()
+            .find(|&hole| hole == 0 || hole > self.nholes)
+            .map(|hole| -> Result<(), String> {
+                let msg = Some(hole)
+                    .filter(|&h| h == 0)
+                    .map(|_| "Tuning adjustment specified for hole 0, but holes are 1-indexed.".to_string())
+                    .unwrap_or_else(|| format!(
+                        "Tuning adjustment specified for hole {}, but the flute only has {} holes.",
+                        hole, self.nholes
+                    ));
+                Err(msg)
+            })
+            .transpose()?;
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeSet;
+
+    fn base_valid_args() -> Args {
+        Args {
+            length: 300.0,
+            position: 9.0,
+            nholes: 6,
+            fraction: 0.5,
+            scale: "major".to_string(),
+            tune: Tune::default(),
+            drop: Drop::default(),
+            labium: 6.0,
+        }
+    }
+
+    #[test]
+    fn test_valid_args() {
+        let args = base_valid_args();
+        assert!(args.validate().is_ok());
+    }
+
+    #[test]
+    fn test_invalid_length() {
+        let mut args = base_valid_args();
+        args.length = 0.0;
+        assert_eq!(args.validate().unwrap_err(), "Length must be greater than zero.");
+
+        args.length = -10.0;
+        assert_eq!(args.validate().unwrap_err(), "Length must be greater than zero.");
+    }
+
+    #[test]
+    fn test_invalid_labium() {
+        let mut args = base_valid_args();
+        args.labium = 0.0;
+        assert_eq!(args.validate().unwrap_err(), "Labium depth must be greater than zero.");
+
+        args.labium = -1.0;
+        assert_eq!(args.validate().unwrap_err(), "Labium depth must be greater than zero.");
+    }
+
+    #[test]
+    fn test_length_less_than_labium() {
+        let mut args = base_valid_args();
+        args.length = 5.0;
+        args.labium = 6.0;
+        assert!(args.validate().unwrap_err().contains("must be greater than labium depth"));
+    }
+
+    #[test]
+    fn test_invalid_fraction() {
+        let mut args = base_valid_args();
+        args.fraction = 0.0;
+        assert_eq!(args.validate().unwrap_err(), "Fraction must be strictly between 0.0 and 1.0.");
+
+        args.fraction = 1.0;
+        assert_eq!(args.validate().unwrap_err(), "Fraction must be strictly between 0.0 and 1.0.");
+
+        args.fraction = 1.5;
+        assert_eq!(args.validate().unwrap_err(), "Fraction must be strictly between 0.0 and 1.0.");
+    }
+
+    #[test]
+    fn test_invalid_position() {
+        let mut args = base_valid_args();
+        args.position = 0.0;
+        assert_eq!(args.validate().unwrap_err(), "Position must be greater than zero.");
+
+        args.position = -2.0;
+        assert_eq!(args.validate().unwrap_err(), "Position must be greater than zero.");
+    }
+
+    #[test]
+    fn test_invalid_nholes() {
+        let mut args = base_valid_args();
+        args.nholes = 0;
+        assert_eq!(args.validate().unwrap_err(), "Number of holes must be at least 1.");
+    }
+
+    #[test]
+    fn test_invalid_scale() {
+        let mut args = base_valid_args();
+        args.scale = "invalid_scale".to_string();
+        assert!(args.validate().unwrap_err().contains("Unknown scale 'invalid_scale'"));
+    }
+
+    #[test]
+    fn test_invalid_drop_out_of_bounds() {
+        let mut args = base_valid_args();
+        // major scale layout has length 7 (intervals). So index 7 is out of bounds (valid indices: 0..7, which are 0 to 6)
+        let mut drop_set = BTreeSet::new();
+        drop_set.insert(7);
+        args.drop = Drop { drop_from_scale: drop_set };
+        assert!(args.validate().unwrap_err().contains("Drop index 7 is out of bounds"));
+    }
+
+    #[test]
+    fn test_invalid_drop_all() {
+        let mut args = base_valid_args();
+        // drop all indices for major scale (0..7 indices, total 7)
+        let mut drop_set = BTreeSet::new();
+        for i in 0..7 {
+            drop_set.insert(i);
+        }
+        args.drop = Drop { drop_from_scale: drop_set };
+        assert!(args.validate().unwrap_err().contains("Cannot drop all elements of scale"));
+    }
+
+    #[test]
+    fn test_invalid_tune_zero() {
+        let mut args = base_valid_args();
+        let mut pitch_map = std::collections::BTreeMap::new();
+        pitch_map.insert(0, 10.0);
+        args.tune = Tune { pitch: pitch_map };
+        assert!(args.validate().unwrap_err().contains("holes are 1-indexed"));
+    }
+
+    #[test]
+    fn test_invalid_tune_out_of_bounds() {
+        let mut args = base_valid_args();
+        let mut pitch_map = std::collections::BTreeMap::new();
+        pitch_map.insert(7, 10.0); // 7 is greater than 6 nholes
+        args.tune = Tune { pitch: pitch_map };
+        assert!(args.validate().unwrap_err().contains("the flute only has 6 holes"));
+    }
+}
+
+

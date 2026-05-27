@@ -19,14 +19,16 @@ impl FromStr for Drop {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        if s.is_empty() {
-            Ok(Drop::default())
-        } else {
-            s.split(",")
-                .map(|s| s.parse::<usize>())
-                .collect::<Result<BTreeSet<usize>, _>>()
-                .map(|b| Drop { drop_from_scale: b })
-                .map_err(|_| format!("Invalid drop value: {}", s))
-        }
+        Some(s)
+            .filter(|s| !s.is_empty())
+            .map(|s| {
+                s.split(',')
+                    .map(|item| item.parse::<usize>().map_err(|_| format!("Invalid drop value: {}", s)))
+                    .collect::<Result<BTreeSet<usize>, String>>()
+            })
+            .transpose()
+            .map(|opt| Drop {
+                drop_from_scale: opt.unwrap_or_default(),
+            })
     }
 }

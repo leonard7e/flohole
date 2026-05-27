@@ -1,7 +1,6 @@
 use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::str::FromStr;
-use std::vec::Vec;
 
 #[derive(Clone, Debug)]
 #[derive(Default)]
@@ -20,30 +19,36 @@ impl FromStr for Tune {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let mut tune_map: BTreeMap<usize, f64> = BTreeMap::new();
-        if s.is_empty() {
-            return Ok(Tune { pitch: tune_map });
-        }
+        Some(s)
+            .filter(|s| !s.is_empty())
+            .map(|s| {
+                s.split(',')
+                    .map(|entry| {
+                        let mut parts = entry.split('=');
+                        let key_part = parts.next().ok_or_else(|| format!("Invalid tune entry: {}", entry))?;
+                        let val_part = parts.next().ok_or_else(|| format!("Invalid tune entry: {}", entry))?;
 
-        for entry in s.split(',') {
-            let parts: Vec<&str> = entry.split('=').collect();
-            if parts.len() != 2 {
-                return Err(format!("Invalid tune entry: {}", entry));
-            }
+                        Some(())
+                            .filter(|_| parts.next().is_none())
+                            .ok_or_else(|| format!("Invalid tune entry: {}", entry))?;
 
-            let hole_index_str = parts[0].trim().replace("h", "");
-            let hole_index = hole_index_str
-                .parse::<usize>()
-                .map_err(|_e| format!("Invalid hole index: {}", hole_index_str))?;
+                        let hole_index_str = key_part.trim().replace("h", "");
+                        let hole_index = hole_index_str
+                            .parse::<usize>()
+                            .map_err(|_| format!("Invalid hole index: {}", hole_index_str))?;
 
-            let adjustment_str = parts[1].trim();
-            let adjustment = adjustment_str
-                .parse::<f64>()
-                .map_err(|_e| format!("Invalid adjustment value: {}", adjustment_str))?;
+                        let adjustment_str = val_part.trim();
+                        let adjustment = adjustment_str
+                            .parse::<f64>()
+                            .map_err(|_| format!("Invalid adjustment value: {}", adjustment_str))?;
 
-            tune_map.insert(hole_index, adjustment);
-        }
-
-        Ok(Tune { pitch: tune_map })
+                        Ok((hole_index, adjustment))
+                    })
+                    .collect::<Result<BTreeMap<usize, f64>, String>>()
+            })
+            .transpose()
+            .map(|opt| Tune {
+                pitch: opt.unwrap_or_default(),
+            })
     }
 }

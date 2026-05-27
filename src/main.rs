@@ -114,6 +114,12 @@ fn report_results_to_user(args: &argument_parser::Args, flute_scale: &[f64], hol
 fn main() {
     let args = argument_parser::Args::parse();
 
+    if let Err(err) = args.validate() {
+        use clap::CommandFactory;
+        let mut cmd = argument_parser::Args::command();
+        cmd.error(clap::error::ErrorKind::ValueValidation, err).exit();
+    }
+
     let scale_layout = scales::scale_layout();
 
     let flute_scale: Vec<f64> = flute_scale(&args, scale_layout);
