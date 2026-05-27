@@ -2,9 +2,12 @@
 This command line tools tries to be useful for Flutemakers. It calculates the locations for fingerholes.
 It takes several parameters to calculate fingerhole positions for a flute.
 
-It requires the following options:
+It requires the following positional argument:
 
-*   `-l`, `--length`: The total length of the flute in mm.
+*   `LENGTH`: The total length of the flute in mm (positional argument, required).
+
+Options:
+
 *   `-b`, `--labium`: The length of the labium (embouchure hole) in mm.
 *   `-f`, `--fraction`: A fraction used in the calculation of fingerhole positions.
 *   `-p`, `--position`: A position value in halftones, used in the calculation.
