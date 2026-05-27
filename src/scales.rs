@@ -10,8 +10,6 @@ pub enum Scale {
     Pentatonic,
     #[value(name = "whole-tone")]
     WholeTone,
-    #[value(name = "chromatic_minor")]
-    ChromaticMinor,
 }
 
 impl fmt::Display for Scale {
@@ -46,7 +44,6 @@ impl Scale {
             Scale::Zminor => z_minor,
             Scale::Pentatonic => pentatonic,
             Scale::WholeTone => vec![2.0],
-            Scale::ChromaticMinor => vec![2.0, 1.0, 2.0, 2.0, 2.0, 2.0, 1.0],
         }
     }
 }
