@@ -3,17 +3,11 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 #[derive(Clone, Debug)]
+#[derive(Default)]
 pub struct Drop {
     pub drop_from_scale: BTreeSet<usize>,
 }
 
-impl Default for Drop {
-    fn default() -> Self {
-        Drop {
-            drop_from_scale: BTreeSet::new(),
-        }
-    }
-}
 
 impl Display for Drop {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -26,7 +20,7 @@ impl FromStr for Drop {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.is_empty() {
-            return Ok(Drop::default());
+            Ok(Drop::default())
         } else {
             s.split(",")
                 .map(|s| s.parse::<usize>())

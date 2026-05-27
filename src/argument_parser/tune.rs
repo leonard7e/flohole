@@ -4,17 +4,11 @@ use std::str::FromStr;
 use std::vec::Vec;
 
 #[derive(Clone, Debug)]
+#[derive(Default)]
 pub struct Tune {
     pub pitch: BTreeMap<usize, f64>,
 }
 
-impl Default for Tune {
-    fn default() -> Self {
-        Tune {
-            pitch: BTreeMap::new(),
-        }
-    }
-}
 
 impl Display for Tune {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
