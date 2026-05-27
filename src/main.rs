@@ -1,5 +1,5 @@
 use clap::Parser;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 
 mod argument_parser;
 mod scales;
@@ -37,10 +37,9 @@ fn calculate_fingerhole_positions(
         .collect()
 }
 
-fn flute_scale(args: &argument_parser::Args, scale_layout: HashMap<&str, Vec<f64>>) -> Vec<f64> {
-    scale_layout
-        .get(args.scale.as_str())
-        .expect("Invalid scale")
+fn flute_scale(args: &argument_parser::Args) -> Vec<f64> {
+    args.scale
+        .layout()
         .iter()
         // Assemble the scale layout for the flute
         .enumerate()
@@ -117,12 +116,11 @@ fn main() {
     if let Err(err) = args.validate() {
         use clap::CommandFactory;
         let mut cmd = argument_parser::Args::command();
-        cmd.error(clap::error::ErrorKind::ValueValidation, err).exit();
+        cmd.error(clap::error::ErrorKind::ValueValidation, err)
+            .exit();
     }
 
-    let scale_layout = scales::scale_layout();
-
-    let flute_scale: Vec<f64> = flute_scale(&args, scale_layout);
+    let flute_scale: Vec<f64> = flute_scale(&args);
 
     let holes = calculate_fingerhole_positions(
         args.labium,

@@ -1,3 +1,4 @@
+use crate::scales::Scale;
 use clap::Parser;
 
 pub mod drop;
@@ -35,8 +36,8 @@ pub struct Args {
     pub fraction: f64,
 
     /// Layout of the holes
-    #[arg(short, long, default_value = "major")]
-    pub scale: String,
+    #[arg(short, long, value_enum, default_value_t = Scale::Major)]
+    pub scale: Scale,
 
     #[arg(short, long, default_value = "")]
     pub tune: Tune,
@@ -61,10 +62,12 @@ impl Args {
 
         Some(())
             .filter(|_| self.length > self.labium)
-            .ok_or_else(|| format!(
-                "Length ({:.2} mm) must be greater than labium depth ({:.2} mm).",
-                self.length, self.labium
-            ))?;
+            .ok_or_else(|| {
+                format!(
+                    "Length ({:.2} mm) must be greater than labium depth ({:.2} mm).",
+                    self.length, self.labium
+                )
+            })?;
 
         Some(self.fraction)
             .filter(|&f| f > 0.0 && f < 1.0)
@@ -78,23 +81,11 @@ impl Args {
             .filter(|&n| n > 0)
             .ok_or_else(|| "Number of holes must be at least 1.".to_string())?;
 
-        // Validate scale existence
-        let layouts = crate::scales::scale_layout();
-        let scale_pattern = layouts
-            .get(self.scale.as_str())
-            .ok_or_else(|| {
-                let mut supported: Vec<_> = layouts.keys().cloned().collect();
-                supported.sort();
-                format!(
-                    "Unknown scale '{}'. Supported scales are: {}",
-                    self.scale,
-                    supported.join(", ")
-                )
-            })?;
-
         // Validate drop indices
+        let scale_pattern = self.scale.layout();
         let scale_len = scale_pattern.len();
-        self.drop.drop_from_scale
+        self.drop
+            .drop_from_scale
             .iter()
             .copied()
             .find(|&dropped| dropped >= scale_len)
@@ -108,10 +99,12 @@ impl Args {
 
         Some(self.drop.drop_from_scale.len())
             .filter(|&len| len < scale_len)
-            .ok_or_else(|| format!(
-                "Cannot drop all elements of scale '{}'. At least one interval must remain.",
-                self.scale
-            ))?;
+            .ok_or_else(|| {
+                format!(
+                    "Cannot drop all elements of scale '{}'. At least one interval must remain.",
+                    self.scale
+                )
+            })?;
 
         // Validate tuning hole indices (1-based index)
         self.tune.pitch
@@ -145,7 +138,7 @@ mod tests {
             position: 9.0,
             nholes: 6,
             fraction: 0.5,
-            scale: "major".to_string(),
+            scale: Scale::Major,
             tune: Tune::default(),
             drop: Drop::default(),
             labium: 6.0,
@@ -162,20 +155,32 @@ mod tests {
     fn test_invalid_length() {
         let mut args = base_valid_args();
         args.length = 0.0;
-        assert_eq!(args.validate().unwrap_err(), "Length must be greater than zero.");
+        assert_eq!(
+            args.validate().unwrap_err(),
+            "Length must be greater than zero."
+        );
 
         args.length = -10.0;
-        assert_eq!(args.validate().unwrap_err(), "Length must be greater than zero.");
+        assert_eq!(
+            args.validate().unwrap_err(),
+            "Length must be greater than zero."
+        );
     }
 
     #[test]
     fn test_invalid_labium() {
         let mut args = base_valid_args();
         args.labium = 0.0;
-        assert_eq!(args.validate().unwrap_err(), "Labium depth must be greater than zero.");
+        assert_eq!(
+            args.validate().unwrap_err(),
+            "Labium depth must be greater than zero."
+        );
 
         args.labium = -1.0;
-        assert_eq!(args.validate().unwrap_err(), "Labium depth must be greater than zero.");
+        assert_eq!(
+            args.validate().unwrap_err(),
+            "Labium depth must be greater than zero."
+        );
     }
 
     #[test]
@@ -183,44 +188,65 @@ mod tests {
         let mut args = base_valid_args();
         args.length = 5.0;
         args.labium = 6.0;
-        assert!(args.validate().unwrap_err().contains("must be greater than labium depth"));
+        assert!(
+            args.validate()
+                .unwrap_err()
+                .contains("must be greater than labium depth")
+        );
     }
 
     #[test]
     fn test_invalid_fraction() {
         let mut args = base_valid_args();
         args.fraction = 0.0;
-        assert_eq!(args.validate().unwrap_err(), "Fraction must be strictly between 0.0 and 1.0.");
+        assert_eq!(
+            args.validate().unwrap_err(),
+            "Fraction must be strictly between 0.0 and 1.0."
+        );
 
         args.fraction = 1.0;
-        assert_eq!(args.validate().unwrap_err(), "Fraction must be strictly between 0.0 and 1.0.");
+        assert_eq!(
+            args.validate().unwrap_err(),
+            "Fraction must be strictly between 0.0 and 1.0."
+        );
 
         args.fraction = 1.5;
-        assert_eq!(args.validate().unwrap_err(), "Fraction must be strictly between 0.0 and 1.0.");
+        assert_eq!(
+            args.validate().unwrap_err(),
+            "Fraction must be strictly between 0.0 and 1.0."
+        );
     }
 
     #[test]
     fn test_invalid_position() {
         let mut args = base_valid_args();
         args.position = 0.0;
-        assert_eq!(args.validate().unwrap_err(), "Position must be greater than zero.");
+        assert_eq!(
+            args.validate().unwrap_err(),
+            "Position must be greater than zero."
+        );
 
         args.position = -2.0;
-        assert_eq!(args.validate().unwrap_err(), "Position must be greater than zero.");
+        assert_eq!(
+            args.validate().unwrap_err(),
+            "Position must be greater than zero."
+        );
     }
 
     #[test]
     fn test_invalid_nholes() {
         let mut args = base_valid_args();
         args.nholes = 0;
-        assert_eq!(args.validate().unwrap_err(), "Number of holes must be at least 1.");
+        assert_eq!(
+            args.validate().unwrap_err(),
+            "Number of holes must be at least 1."
+        );
     }
 
     #[test]
     fn test_invalid_scale() {
-        let mut args = base_valid_args();
-        args.scale = "invalid_scale".to_string();
-        assert!(args.validate().unwrap_err().contains("Unknown scale 'invalid_scale'"));
+        // clap handles invalid values automatically;
+        // manual validation of Scale is no longer possible because it's an Enum.
     }
 
     #[test]
@@ -229,8 +255,14 @@ mod tests {
         // major scale layout has length 7 (intervals). So index 7 is out of bounds (valid indices: 0..7, which are 0 to 6)
         let mut drop_set = BTreeSet::new();
         drop_set.insert(7);
-        args.drop = Drop { drop_from_scale: drop_set };
-        assert!(args.validate().unwrap_err().contains("Drop index 7 is out of bounds"));
+        args.drop = Drop {
+            drop_from_scale: drop_set,
+        };
+        assert!(
+            args.validate()
+                .unwrap_err()
+                .contains("Drop index 7 is out of bounds")
+        );
     }
 
     #[test]
@@ -241,8 +273,14 @@ mod tests {
         for i in 0..7 {
             drop_set.insert(i);
         }
-        args.drop = Drop { drop_from_scale: drop_set };
-        assert!(args.validate().unwrap_err().contains("Cannot drop all elements of scale"));
+        args.drop = Drop {
+            drop_from_scale: drop_set,
+        };
+        assert!(
+            args.validate()
+                .unwrap_err()
+                .contains("Cannot drop all elements of scale")
+        );
     }
 
     #[test]
@@ -260,8 +298,10 @@ mod tests {
         let mut pitch_map = std::collections::BTreeMap::new();
         pitch_map.insert(7, 10.0); // 7 is greater than 6 nholes
         args.tune = Tune { pitch: pitch_map };
-        assert!(args.validate().unwrap_err().contains("the flute only has 6 holes"));
+        assert!(
+            args.validate()
+                .unwrap_err()
+                .contains("the flute only has 6 holes")
+        );
     }
 }
-
-
