@@ -47,16 +47,3 @@ impl Scale {
         }
     }
 }
-
-// pub fn scale_layout() -> std::collections::HashMap<&'static str, Vec<f64>> {
-//     let mut drill_layout = std::collections::HashMap::new();
-//     drill_layout.insert("major", Scale::Major.layout());
-//     drill_layout.insert("minor", Scale::Minor.layout());
-//     drill_layout.insert("hminor", Scale::Hminor.layout());
-//     drill_layout.insert("zminor", Scale::Zminor.layout());
-//     drill_layout.insert("pentatonic", Scale::Pentatonic.layout());
-//     drill_layout.insert("whole-tone", Scale::WholeTone.layout());
-//     drill_layout.insert("chromatic_minor", Scale::ChromaticMinor.layout());
-
-//     drill_layout
-// }

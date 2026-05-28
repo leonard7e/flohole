@@ -84,18 +84,18 @@ impl Args {
         // Validate drop indices
         let scale_pattern = self.scale.layout();
         let scale_len = scale_pattern.len();
-        self.drop
+        if let Some(dropped) = self
+            .drop
             .drop_from_scale
             .iter()
             .copied()
-            .find(|&dropped| dropped >= scale_len)
-            .map(|dropped| -> Result<(), String> {
-                Err(format!(
-                    "Drop index {} is out of bounds for scale '{}' (valid indices: 0..{})",
-                    dropped, self.scale, scale_len
-                ))
-            })
-            .transpose()?;
+            .find(|&d| d >= scale_len)
+        {
+            return Err(format!(
+                "Drop index {} is out of bounds for scale '{}' (valid indices: 0..{})",
+                dropped, self.scale, scale_len
+            ));
+        }
 
         Some(self.drop.drop_from_scale.len())
             .filter(|&len| len < scale_len)
@@ -269,10 +269,7 @@ mod tests {
     fn test_invalid_drop_all() {
         let mut args = base_valid_args();
         // drop all indices for major scale (0..7 indices, total 7)
-        let mut drop_set = BTreeSet::new();
-        for i in 0..7 {
-            drop_set.insert(i);
-        }
+        let drop_set: BTreeSet<_> = (0..7).collect();
         args.drop = Drop {
             drop_from_scale: drop_set,
         };
