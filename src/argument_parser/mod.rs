@@ -61,8 +61,8 @@ impl Args {
             .ok_or_else(|| "Length must be greater than zero.".to_string())?;
 
         Some(self.labium)
-            .filter(|&l| l > 0.0)
-            .ok_or_else(|| "Labium depth must be greater than zero.".to_string())?;
+            .filter(|&l| l >= 0.0)
+            .ok_or_else(|| "Labium depth must be greater or equal zero.".to_string())?;
 
         Some(())
             .filter(|_| self.length > self.labium)
@@ -179,16 +179,10 @@ mod tests {
     #[test]
     fn test_invalid_labium() {
         let mut args = base_valid_args();
-        args.labium = 0.0;
-        assert_eq!(
-            args.validate().unwrap_err(),
-            "Labium depth must be greater than zero."
-        );
-
         args.labium = -1.0;
         assert_eq!(
             args.validate().unwrap_err(),
-            "Labium depth must be greater than zero."
+            "Labium depth must be greater or equal zero."
         );
     }
 
