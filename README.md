@@ -10,6 +10,7 @@ Options:
 
 *   `-b`, `--labium`: The length of the labium (embouchure hole) in mm.
 *   `-f`, `--fraction`: A fraction used in the calculation of fingerhole positions.
+*   `-k`, `--key`: Key transposition in semitones (default: 0.0). Must be greater than or equal to 0.
 *   `-p`, `--position`: A position value in halftones, used in the calculation.
 *   `-s`, `--scale`: The scale to be used for the flute (e.g., "major", "minor").
 *   `-n`, `--nholes`: The number of fingerholes to calculate.

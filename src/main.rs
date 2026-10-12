@@ -9,6 +9,7 @@ fn fingerhole_locations(
     pos: f64,
     notes: &[f64],
     pitch: &BTreeMap<usize, f64>,
+    key: f64,
 ) -> Vec<f64> {
     notes
         .iter()
@@ -16,8 +17,8 @@ fn fingerhole_locations(
         .map(|(idx, &note)| {
             pitch
                 .get(&(idx + 1))
-                .map(|t| fraction.powf((note + t / 100.0) / pos))
-                .unwrap_or(fraction.powf(note / pos))
+                .map(|t| fraction.powf((key + note + t / 100.0) / pos))
+                .unwrap_or(fraction.powf((key + note) / pos))
         })
         .collect()
 }
@@ -29,8 +30,9 @@ fn calculate_fingerhole_positions(
     position_at_fraction: f64,
     scale: &[f64],
     pitch: &BTreeMap<usize, f64>,
+    key: f64,
 ) -> Vec<f64> {
-    let fingerholes = fingerhole_locations(fraction, position_at_fraction, scale, pitch);
+    let fingerholes = fingerhole_locations(fraction, position_at_fraction, scale, pitch, key);
     fingerholes
         .iter()
         .map(|&p| labium + (length - labium) * p)
@@ -67,7 +69,8 @@ fn report_results_to_user(args: &argument_parser::Args, flute_scale: &[f64], hol
     println!("  Number of Fingerholes: {}", args.nholes);
     println!("\nAcoustic Model Parameters:");
     println!("  Fraction: {:.4}", args.fraction);
-    println!("  Position (Halftones): {:.2}", args.position);
+    println!("  Position (Semitones): {:.2}", args.position);
+    println!("  Key Shift (Semitones): {:.2}", args.key);
 
     if !args.tune.pitch.is_empty() {
         println!("\nTuning Adjustments (cents):");
@@ -102,7 +105,7 @@ fn report_results_to_user(args: &argument_parser::Args, flute_scale: &[f64], hol
             .map(|(index, (&scale, &position))| format!(
                 "  {} …\t{:.2}\t{:.1}",
                 index + 1,
-                scale,
+                scale + args.key,
                 position
             ))
             .collect::<Vec<String>>()
@@ -129,6 +132,7 @@ fn main() {
         args.position,
         &flute_scale,
         &args.tune.pitch,
+        args.key,
     );
 
     report_results_to_user(&args, &flute_scale, &holes);

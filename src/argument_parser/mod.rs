@@ -35,6 +35,10 @@ pub struct Args {
     #[arg(short, long, default_value_t = 0.5)]
     pub fraction: f64,
 
+    /// Key transposition in Semitones
+    #[arg(short, long, default_value_t = 0.0)]
+    pub key: f64,
+
     /// Layout of the holes
     #[arg(short, long, value_enum, default_value_t = Scale::Major)]
     pub scale: Scale,
@@ -80,6 +84,10 @@ impl Args {
         Some(self.nholes)
             .filter(|&n| n > 0)
             .ok_or_else(|| "Number of holes must be at least 1.".to_string())?;
+
+        Some(self.key).filter(|&k| k >= 0.0).ok_or_else(|| {
+            "Key transposition must be greater than or equal to zero.".to_string()
+        })?;
 
         // Validate drop indices
         let scale_pattern = self.scale.layout();
@@ -142,6 +150,7 @@ mod tests {
             tune: Tune::default(),
             drop: Drop::default(),
             labium: 6.0,
+            key: 0.0,
         }
     }
 
